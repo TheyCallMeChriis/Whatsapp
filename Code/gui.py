@@ -105,7 +105,7 @@ def mostrar_login():
     entry_login_pass.pack(pady=(0, 10))
 
     tk.Button(frame, text="Login", bg="#0D1A2B", fg="white", width=30,
-              font=("Segoe UI", 10, "bold"), command=iniciar_sesion).pack(pady=10)
+            font=("Segoe UI", 10, "bold"), command=iniciar_sesion).pack(pady=10)
 
     tk.Label(frame, text="¿No tienes cuenta? Regístrate", font=("Segoe UI", 9), bg="white").pack()
 
@@ -144,12 +144,12 @@ entry_password.pack(pady=(0, 15))
 
 # Botón registrar
 tk.Button(frame, text="Registrarte", bg="#0D1A2B", fg="white", width=30,
-          font=("Segoe UI", 10, "bold"), command=registrar_usuario).pack(pady=10)
+        font=("Segoe UI", 10, "bold"), command=registrar_usuario).pack(pady=10)
 
 tk.Label(frame, text="Al registrarte, aceptas nuestras Condiciones de uso y Política de privacidad.",
-         font=("Segoe UI", 8), bg="white", wraplength=300, justify="center").pack(pady=5)
+        font=("Segoe UI", 8), bg="white", wraplength=300, justify="center").pack(pady=5)
 
 tk.Button(frame, text="¿Ya tienes una cuenta? Iniciar Sesión", bg="white", fg="#0D6EFD", bd=0,
-          font=("Segoe UI", 9, "bold"), command=mostrar_login).pack()
+        font=("Segoe UI", 9, "bold"), command=mostrar_login).pack()
 
 ventana.mainloop()
