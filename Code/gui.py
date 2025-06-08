@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 import pyodbc
 
-# Conexión SQL Server
+# ---------------------------- CONEXIÓN A BASE DE DATOS ----------------------------
+
 def conectar_bd():
     return pyodbc.connect(
         "DRIVER={ODBC Driver 17 for SQL Server};"
@@ -11,7 +12,8 @@ def conectar_bd():
         "Trusted_Connection=yes;"
     )
 
-# Centrado de ventanas
+# ---------------------------- CENTRAR VENTANA ----------------------------
+
 def centrar_ventana(win):
     win.update_idletasks()
     w = win.winfo_width()
@@ -20,7 +22,8 @@ def centrar_ventana(win):
     y = (win.winfo_screenheight() // 2) - (h // 2)
     win.geometry(f"{w}x{h}+{x}+{y}")
 
-# Registro de usuario
+# ---------------------------- REGISTRAR USUARIO ----------------------------
+
 def registrar_usuario():
     nombre = entry_nombre.get()
     apellido = entry_apellido.get()
@@ -36,80 +39,90 @@ def registrar_usuario():
         conn = conectar_bd()
         cursor = conn.cursor()
 
-        # Ejecutar procedimiento de registro
-        cursor.execute("""
-            EXEC sp_RegistrarUsuario ?, ?, ?, ?, ?
-        """, (nombre, apellido, contrasena, correo, telefono))
-
+        cursor.execute("EXEC sp_RegistrarUsuario ?, ?, ?, ?, ?", 
+                    (nombre, apellido, contrasena, correo, telefono))
         conn.commit()
         conn.close()
+
         messagebox.showinfo("Registro exitoso", "Usuario registrado correctamente.")
     except pyodbc.IntegrityError:
-        messagebox.showerror("Error", "El correo o número de teléfono ya está registrado.")
+        messagebox.showerror("Error", "El correo o teléfono ya está registrado.")
     except Exception as e:
         messagebox.showerror("Error", f"Ocurrió un error: {e}")
 
-# Iniciar sesión
+# ---------------------------- INICIAR SESIÓN ----------------------------
+
 def iniciar_sesion():
-    identificador = entry_login_correo.get()
+    correo = entry_login_correo.get()
     contrasena = entry_login_pass.get()
 
-    if not (identificador and contrasena):
-        messagebox.showwarning("Campos vacíos", "Debe ingresar todos los datos.")
-        return
-
     try:
-        conn = conectar_bd()
-        cursor = conn.cursor()
+        conexion = conectar_bd()
+        cursor = conexion.cursor()
 
-        # Ejecutar el procedimiento almacenado para login
-        cursor.execute("""
-            EXEC sp_LoginUsuario ?, ?
-        """, (identificador, contrasena))
-
+        cursor.execute("EXEC sp_LoginUsuario ?, ?", correo, contrasena)
         resultado = cursor.fetchone()
 
         if resultado:
-            usuario_id = resultado.UsuarioID
-            token = resultado.Token
-            messagebox.showinfo("Login exitoso", f"ID de usuario: {usuario_id}\nToken de sesión: {token}")
+            columnas = [col[0] for col in cursor.description]
+            data = dict(zip(columnas, resultado))
+
+            if data.get("UsuarioID") and data.get("Token"):
+                usuario_id = data["UsuarioID"]
+                token = data["Token"]
+                messagebox.showinfo("Bienvenido", f"Bienvenido usuario {usuario_id}")
+                mostrar_interfaz_principal(usuario_id, token)
+            else:
+                messagebox.showerror("Error", "Credenciales incorrectas.")
         else:
-            messagebox.showerror("Login fallido", "Credenciales incorrectas o usuario inactivo.")
+            messagebox.showerror("Error", "No se recibió respuesta del servidor.")
 
-        conn.close()
-
+        cursor.close()
+        conexion.close()
     except Exception as e:
-        messagebox.showerror("Error", f"Ocurrió un error: {e}")
-        print(f"Error: {e}")
+        messagebox.showerror("Error", f"Ocurrió un error: {str(e)}")
 
-# Ventana de login
+# ---------------------------- VENTANA DE LOGIN ----------------------------
+
 def mostrar_login():
-    global entry_login_correo, entry_login_pass  # Definir las variables globalmente
     login_win = tk.Toplevel(ventana)
-    login_win.title("Login")
-    login_win.geometry("350x330")
+    login_win.title("Iniciar sesión")
+    login_win.geometry("400x300")
     login_win.configure(bg="#EAF0FA")
     centrar_ventana(login_win)
 
     frame = tk.Frame(login_win, bg="white", padx=20, pady=20)
-    frame.pack(pady=30, padx=30)
+    frame.pack(pady=30)
 
-    tk.Label(frame, text="Login", font=("Segoe UI", 16, "bold"), bg="white").pack(pady=10)
+    tk.Label(frame, text="Iniciar sesión", font=("Segoe UI", 16, "bold"), bg="white").pack(pady=10)
 
-    tk.Label(frame, text="📧 Correo Electrónico", font=("Segoe UI", 10), bg="white").pack(anchor="w")
+    tk.Label(frame, text="📧 Correo electrónico", font=("Segoe UI", 10), bg="white").pack(anchor="w")
+    global entry_login_correo
     entry_login_correo = tk.Entry(frame, width=35)
     entry_login_correo.pack(pady=(0, 10))
 
     tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), bg="white").pack(anchor="w")
+    global entry_login_pass
     entry_login_pass = tk.Entry(frame, show="*", width=35)
-    entry_login_pass.pack(pady=(0, 10))
+    entry_login_pass.pack(pady=(0, 15))
 
-    tk.Button(frame, text="Login", bg="#0D1A2B", fg="white", width=30,
+    tk.Button(frame, text="Iniciar sesión", bg="#0D1A2B", fg="white", width=30,
             font=("Segoe UI", 10, "bold"), command=iniciar_sesion).pack(pady=10)
 
-    tk.Label(frame, text="¿No tienes cuenta? Regístrate", font=("Segoe UI", 9), bg="white").pack()
+# ---------------------------- INTERFAZ PRINCIPAL TRAS LOGIN ----------------------------
 
-# INTERFAZ PRINCIPAL
+def mostrar_interfaz_principal(usuario_id, token):
+    ventana_chat = tk.Toplevel(ventana)
+    ventana_chat.title("Mensajería")
+    ventana_chat.geometry("800x600")
+    ventana_chat.configure(bg="white")
+    centrar_ventana(ventana_chat)
+
+    label = tk.Label(ventana_chat, text=f"Bienvenido, usuario {usuario_id}", font=("Segoe UI", 14), bg="white")
+    label.pack(pady=20)
+
+# ---------------------------- INTERFAZ DE REGISTRO ----------------------------
+
 ventana = tk.Tk()
 ventana.title("Registro")
 ventana.geometry("450x530")
@@ -121,7 +134,6 @@ frame.pack(pady=30)
 
 tk.Label(frame, text="Regístrate", font=("Segoe UI", 16, "bold"), bg="white").pack(pady=10)
 
-# Campos
 tk.Label(frame, text="👤 Nombre", font=("Segoe UI", 10), bg="white").pack(anchor="w")
 entry_nombre = tk.Entry(frame, width=35)
 entry_nombre.pack(pady=(0, 10))
@@ -142,7 +154,6 @@ tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), bg="white").pack
 entry_password = tk.Entry(frame, show="*", width=35)
 entry_password.pack(pady=(0, 15))
 
-# Botón registrar
 tk.Button(frame, text="Registrarte", bg="#0D1A2B", fg="white", width=30,
         font=("Segoe UI", 10, "bold"), command=registrar_usuario).pack(pady=10)
 

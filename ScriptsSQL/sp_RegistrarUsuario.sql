@@ -11,38 +11,41 @@ CREATE SYMMETRIC KEY Usuario_Key_01
 WITH ALGORITHM = AES_256
 ENCRYPTION BY CERTIFICATE Usuario_KEY_CERT;
 
+GO
+
 CREATE OR ALTER PROCEDURE sp_RegistrarUsuario (
     @param_Nombre NVARCHAR(100),
     @param_Apellido NVARCHAR(100),
-    @param_Contrasenna NVARCHAR(100), -- Contraseña en texto plano
+    @param_Contrasenna NVARCHAR(100), -- Contraseï¿½a en texto plano
     @param_Correo NVARCHAR(100),
     @param_NumeroTelefono NVARCHAR(100)
 )
 AS
 BEGIN
     DECLARE @ContrasennaEncriptada VARBINARY(128);
-    -- Abrir la llave simétrica para encriptar la contraseña
+    -- Abrir la llave simï¿½trica para encriptar la contraseï¿½a
     OPEN SYMMETRIC KEY Usuario_Key_01
     DECRYPTION BY CERTIFICATE Usuario_KEY_CERT;
 
-    -- Encriptar la contraseña
+    -- Encriptar la contraseï¿½a
     SET @ContrasennaEncriptada = ENCRYPTBYKEY(KEY_GUID('Usuario_Key_01'), @param_Contrasenna);
 
     -- Insertar el nuevo usuario
     INSERT INTO Usuario (Nombre, Apellido, Contrasenna, Correo, NumeroTelefono)
     VALUES (@param_Nombre, @param_Apellido, @ContrasennaEncriptada, @param_Correo, @param_NumeroTelefono);
 
-    -- Cerrar la llave simétrica
+    -- Cerrar la llave simï¿½trica
     CLOSE SYMMETRIC KEY Usuario_Key_01;
 
     PRINT 'Usuario registrado correctamente.';
 END;
+GO
 
 EXEC sp_RegistrarUsuario
-    @param_Nombre = 'Joselito',
-    @param_Apellido = 'Arias',
-    @param_Contrasenna = 'Pepe2544',
-    @param_Correo = 'joselito@ucr',
-    @param_NumeroTelefono = '63056255';
+    @param_Nombre = 'Prueba',
+    @param_Apellido = 'Uno',
+    @param_Contrasenna = '123',
+    @param_Correo = 'prueba@ucr',
+    @param_NumeroTelefono = '1';
 
 select * from Usuario;
