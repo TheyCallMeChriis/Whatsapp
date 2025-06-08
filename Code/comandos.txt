@@ -1,0 +1,4 @@
+instalar dependencias:
+pip install pyodbc mysql-connector-python
+
+
