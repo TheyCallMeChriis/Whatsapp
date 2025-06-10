@@ -22,7 +22,7 @@ mysql_cursor = mysql_conn.cursor()
 # Borrar datos (orden: dependientes primero)
 mysql_cursor.execute("DELETE FROM Mensaje")
 mysql_cursor.execute("DELETE FROM Sesion")
-mysql_cursor.execute("DELETE FROM Usuario")
+mysql_cursor.execute("DELETE FROM Usuario") 
 
 # Replicar Usuario
 sql_cursor.execute("SELECT UsuarioID, Nombre, Apellido, Contrasenna, Correo, Estado, NumeroTelefono, Actualizado FROM Usuario")

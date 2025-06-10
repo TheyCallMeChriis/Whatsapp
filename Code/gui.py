@@ -12,6 +12,21 @@ def conectar_bd():
         "Trusted_Connection=yes;"
     )
 
+def obtener_usuarios():
+    try:
+        conn = conectar_bd()
+        cursor = conn.cursor()
+
+        cursor.execute("EXEC sp_ObtenerUsuarios")
+        usuarios = cursor.fetchall()
+        conn.close()
+
+        return usuarios
+    except Exception as e:
+        print(f"Error al obtener usuarios: {e}")
+        return []
+
+
 # ---------------------------- CENTRAR VENTANA ----------------------------
 
 def centrar_ventana(win):
@@ -114,12 +129,64 @@ def mostrar_login():
 def mostrar_interfaz_principal(usuario_id, token):
     ventana_chat = tk.Toplevel(ventana)
     ventana_chat.title("Mensajería")
-    ventana_chat.geometry("800x600")
+    ventana_chat.geometry("900x600")
     ventana_chat.configure(bg="white")
     centrar_ventana(ventana_chat)
 
-    label = tk.Label(ventana_chat, text=f"Bienvenido, usuario {usuario_id}", font=("Segoe UI", 14), bg="white")
-    label.pack(pady=20)
+    # ---------------------- FRAME PRINCIPAL ----------------------
+    frame_principal = tk.Frame(ventana_chat, bg="gray", width=900, height=600)
+    frame_principal.pack(fill="both", expand=True)
+
+    # ---------------------- PANEL IZQUIERDO: CONTACTOS ----------------------
+    panel_contactos = tk.Frame(frame_principal, bg="#F1F1F1", width=250)
+    panel_contactos.pack(side="left", fill="y")
+
+    label_contactos = tk.Label(panel_contactos, text="Contactos", font=("Segoe UI", 12, "bold"), bg="#F1F1F1")
+    label_contactos.pack(pady=10)
+
+    # Lista de contactos (esto se llenaría con datos reales desde la BD)
+    lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 10), width=30)
+    lista_contactos.pack(padx=10, pady=5, fill="y", expand=True)
+
+    # Cargar usuarios reales desde la base de datos
+    usuarios = obtener_usuarios()
+    for usuario in usuarios:
+        nombre_completo = f"{usuario.Nombre} {usuario.Apellido}"
+        lista_contactos.insert(tk.END, nombre_completo)
+
+    # ---------------------- PANEL DERECHO: CHAT ----------------------
+    panel_chat = tk.Frame(frame_principal, bg="white")
+    panel_chat.pack(side="right", fill="both", expand=True)
+
+    label_usuario = tk.Label(panel_chat, text=f"Usuario ID: {usuario_id}", font=("Segoe UI", 10), bg="white", anchor="w")
+    label_usuario.pack(fill="x", padx=10, pady=5)
+
+    # Caja de mensajes (tipo historial)
+    text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#FAFAFA", font=("Segoe UI", 10))
+    text_chat.pack(padx=10, pady=(0, 5), fill="both", expand=True)
+
+    # ---------------------- ZONA DE ESCRITURA ----------------------
+    frame_mensaje = tk.Frame(panel_chat, bg="white")
+    frame_mensaje.pack(fill="x", padx=10, pady=5)
+
+    entry_mensaje = tk.Entry(frame_mensaje, font=("Segoe UI", 10))
+    entry_mensaje.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=4)
+
+    def enviar_mensaje():
+        mensaje = entry_mensaje.get().strip()
+        if mensaje:
+            text_chat.config(state="normal")
+            text_chat.insert(tk.END, f"Tú: {mensaje}\n")
+            text_chat.config(state="disabled")
+            entry_mensaje.delete(0, tk.END)
+
+            # Aquí deberías llamar a la función que registra el mensaje en la BD
+            
+            # y que lo envía al destinatario.
+
+    boton_enviar = tk.Button(frame_mensaje, text="Enviar", bg="#0D6EFD", fg="white",
+                            font=("Segoe UI", 10, "bold"), command=enviar_mensaje)
+    boton_enviar.pack(side="right")
 
 # ---------------------------- INTERFAZ DE REGISTRO ----------------------------
 
@@ -156,9 +223,6 @@ entry_password.pack(pady=(0, 15))
 
 tk.Button(frame, text="Registrarte", bg="#0D1A2B", fg="white", width=30,
         font=("Segoe UI", 10, "bold"), command=registrar_usuario).pack(pady=10)
-
-tk.Label(frame, text="Al registrarte, aceptas nuestras Condiciones de uso y Política de privacidad.",
-        font=("Segoe UI", 8), bg="white", wraplength=300, justify="center").pack(pady=5)
 
 tk.Button(frame, text="¿Ya tienes una cuenta? Iniciar Sesión", bg="white", fg="#0D6EFD", bd=0,
         font=("Segoe UI", 9, "bold"), command=mostrar_login).pack()

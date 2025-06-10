@@ -43,9 +43,9 @@ GO
 
 EXEC sp_RegistrarUsuario
     @param_Nombre = 'Prueba',
-    @param_Apellido = 'Uno',
-    @param_Contrasenna = '123',
-    @param_Correo = 'prueba@ucr',
-    @param_NumeroTelefono = '1';
+    @param_Apellido = 'Dos',
+    @param_Contrasenna = '1234',
+    @param_Correo = 'prueba2@ucr',
+    @param_NumeroTelefono = '12';
 
 select * from Usuario;
