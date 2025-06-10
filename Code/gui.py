@@ -185,7 +185,6 @@ def mostrar_interfaz_principal(usuario_id, token):
  
     # ---------------------- FUNCIÓN PARA CARGAR MENSAJES ----------------------
     def cargar_mensajes(event):
-        print("Evento de selección detectado")  # <-- Debug
         seleccion = lista_contactos.curselection()
         if seleccion:
             idx = seleccion[0]
@@ -196,11 +195,13 @@ def mostrar_interfaz_principal(usuario_id, token):
             text_chat.delete("1.0", tk.END)  # Limpiar chat
 
             for m in mensajes:
-                remitente = "Tú" if m.RemitenteID == usuario_id else nombre_contacto
-                text_chat.insert(tk.END, f"{remitente}: {m.Contenido}\n")
+                remitente = "Tú" if m[1] == usuario_id else nombre_contacto
+                contenido = m[3]
+                text_chat.insert(tk.END, f"{remitente}: {contenido}\n")
 
             text_chat.config(state="disabled")
 
+    # ✅ Aquí es donde se conecta el evento con la función
     lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
 
     # ---------------------- ZONA DE ESCRITURA ----------------------
