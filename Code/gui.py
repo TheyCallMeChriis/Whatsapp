@@ -12,6 +12,24 @@ def conectar_bd():
         "Trusted_Connection=yes;"
     )
 
+
+#--------- Metodo para obtener Mensajes Chris
+def obtener_mensajes(usuario_origen_id, usuario_destino_id):
+    try:
+        conn = conectar_bd()
+        cursor = conn.cursor()
+
+        cursor.execute("EXEC sp_ObtenerMensajes ?, ?", usuario_origen_id, usuario_destino_id)
+        mensajes = cursor.fetchall()
+        conn.close()
+
+        return mensajes
+    
+    except Exception as e:
+        print(f"Error al obtener mensajes: {e}")
+        return []
+    
+
 def obtener_usuarios():
     try:
         conn = conectar_bd()
@@ -144,15 +162,16 @@ def mostrar_interfaz_principal(usuario_id, token):
     label_contactos = tk.Label(panel_contactos, text="Contactos", font=("Segoe UI", 12, "bold"), bg="#F1F1F1")
     label_contactos.pack(pady=10)
 
-    # Lista de contactos (esto se llenaría con datos reales desde la BD)
     lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 10), width=30)
     lista_contactos.pack(padx=10, pady=5, fill="y", expand=True)
 
-    # Cargar usuarios reales desde la base de datos
     usuarios = obtener_usuarios()
-    for usuario in usuarios:
+    contactos_dict = {}
+
+    for idx, usuario in enumerate(usuarios):
         nombre_completo = f"{usuario.Nombre} {usuario.Apellido}"
         lista_contactos.insert(tk.END, nombre_completo)
+        contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
 
     # ---------------------- PANEL DERECHO: CHAT ----------------------
     panel_chat = tk.Frame(frame_principal, bg="white")
@@ -161,9 +180,28 @@ def mostrar_interfaz_principal(usuario_id, token):
     label_usuario = tk.Label(panel_chat, text=f"Usuario ID: {usuario_id}", font=("Segoe UI", 10), bg="white", anchor="w")
     label_usuario.pack(fill="x", padx=10, pady=5)
 
-    # Caja de mensajes (tipo historial)
     text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#FAFAFA", font=("Segoe UI", 10))
     text_chat.pack(padx=10, pady=(0, 5), fill="both", expand=True)
+ 
+    # ---------------------- FUNCIÓN PARA CARGAR MENSAJES ----------------------
+    def cargar_mensajes(event):
+        print("Evento de selección detectado")  # <-- Debug
+        seleccion = lista_contactos.curselection()
+        if seleccion:
+            idx = seleccion[0]
+            usuario_destino_id, nombre_contacto = contactos_dict[idx]
+
+            mensajes = obtener_mensajes(usuario_id, usuario_destino_id)
+            text_chat.config(state="normal")
+            text_chat.delete("1.0", tk.END)  # Limpiar chat
+
+            for m in mensajes:
+                remitente = "Tú" if m.RemitenteID == usuario_id else nombre_contacto
+                text_chat.insert(tk.END, f"{remitente}: {m.Contenido}\n")
+
+            text_chat.config(state="disabled")
+
+    lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
 
     # ---------------------- ZONA DE ESCRITURA ----------------------
     frame_mensaje = tk.Frame(panel_chat, bg="white")
@@ -175,19 +213,40 @@ def mostrar_interfaz_principal(usuario_id, token):
     def enviar_mensaje():
         mensaje = entry_mensaje.get().strip()
         if mensaje:
-            text_chat.config(state="normal")
-            text_chat.insert(tk.END, f"Tú: {mensaje}\n")
-            text_chat.config(state="disabled")
-            entry_mensaje.delete(0, tk.END)
+            seleccion = lista_contactos.curselection()
+        if not seleccion:
+            messagebox.showwarning("Selecciona un contacto", "Debes seleccionar un contacto antes de enviar un mensaje.")
+            return
 
-            # Aquí deberías llamar a la función que registra el mensaje en la BD
-            
-            # y que lo envía al destinatario.
+        idx = seleccion[0]
+        usuario_destino_id, nombre_contacto = contactos_dict[idx]
 
-    boton_enviar = tk.Button(frame_mensaje, text="Enviar", bg="#0D6EFD", fg="white",
-                            font=("Segoe UI", 10, "bold"), command=enviar_mensaje)
-    boton_enviar.pack(side="right")
+        registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
 
+        entry_mensaje.delete(0, tk.END)
+        cargar_mensajes(None)  # <-- Refrescar mensajes
+
+   #------ Funcion para mandar mensajes
+    def registrar_mensaje(remitente_id, destinatario_id, mensajeTexto):
+        try:
+            conn = conectar_bd()
+            cursor = conn.cursor()
+            cursor.execute("EXEC sp_EnviarMensaje ?, ?, ?", remitente_id, destinatario_id, mensajeTexto)
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo enviar el mensaje: {e}")
+        
+    boton_enviar = tk.Button(
+    frame_mensaje,
+    text="Enviar",
+    bg="#0D6EFD",
+    fg="white",
+    font=("Segoe UI", 10, "bold"),
+    command=enviar_mensaje
+)
+    boton_enviar.pack(side="right", padx=(5, 0))
+        
 # ---------------------------- INTERFAZ DE REGISTRO ----------------------------
 
 ventana = tk.Tk()
