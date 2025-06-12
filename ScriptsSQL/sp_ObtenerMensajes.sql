@@ -9,7 +9,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Abrir la llave simétrica si aún no está abierta
+    -- Abrir la llave simï¿½trica si aï¿½n no estï¿½ abierta
     IF NOT EXISTS (
         SELECT * FROM sys.openkeys WHERE key_name = 'Usuario_Key_01'
     )
@@ -32,9 +32,10 @@ BEGIN
        OR (m.EmisorID = @param_ReceptorID AND m.ReceptorID = @param_EmisorID)
     ORDER BY m.FechaEnvio ASC;
 
-    -- Cerrar la llave después de usarla
+    -- Cerrar la llave despuï¿½s de usarla
     CLOSE SYMMETRIC KEY Usuario_Key_01;
 END;
 GO
 
-EXEC sp_ObtenerMensajes @param_EmisorID = 1, @param_ReceptorID = 2;
+
+EXEC sp_ObtenerMensajes @param_EmisorID = 4, @param_ReceptorID = 3;
