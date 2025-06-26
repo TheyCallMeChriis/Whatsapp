@@ -14,7 +14,7 @@ sql_cursor = sql_conn.cursor()
 mysql_conn = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="root",
+    password="27186627",
     database="MensajeriaReplica"
 )
 mysql_cursor = mysql_conn.cursor()
