@@ -1,35 +1,44 @@
-# main.py
-
 from interfaz import iniciar_interfaz
 from replica_completa import Replicacion
 from replica_diferencial import ReplicacionDiferencial
+from replicacion_completa_Msql import ReplicacionMySQLtoSQL
+from replicacion_diferencial_Msql import ReplicacionDiferencialMySQLtoSQL
 from Thread import HiloReplicacion
 import time
-import threading
 
 if __name__ == "__main__":
-    # Iniciar hilos de replicación
-    replicacion_completa = Replicacion()
-    replicacion_diferencial = ReplicacionDiferencial()
+    # Crear objetos de replicación
+    rep_sql_mysql = Replicacion()
+    rep_dif_sql_mysql = ReplicacionDiferencial()
+    rep_mysql_sql =  ReplicacionMySQLtoSQL()
+    rep_dif_mysql_sql = ReplicacionDiferencialMySQLtoSQL()
 
-    hilo_completo = HiloReplicacion(replicacion_completa, intervalo_segundos=30)
-    hilo_diferencial = HiloReplicacion(replicacion_diferencial, intervalo_segundos=10)
+    # Crear hilos para cada tipo de replicación
+    hilo1 = HiloReplicacion(rep_sql_mysql, intervalo_segundos=60)
+    hilo2 = HiloReplicacion(rep_dif_sql_mysql, intervalo_segundos=20)
+    hilo3 = HiloReplicacion(rep_mysql_sql, intervalo_segundos=60)
+    hilo4 = HiloReplicacion(rep_dif_mysql_sql, intervalo_segundos=20)
 
-    hilo_completo.iniciar()
-    hilo_diferencial.iniciar()
+    # Iniciar los hilos
+    hilo1.iniciar()
+    hilo2.iniciar()
+    hilo3.iniciar()
+    hilo4.iniciar()
 
-    # Iniciar la interfaz gráfica
+    # Iniciar interfaz gráfica
     try:
         iniciar_interfaz()
     except KeyboardInterrupt:
         print("🛑 Interfaz interrumpida manualmente.")
 
-    # Esperar fin de ejecución o cierre
+    # Esperar a que se cierre el sistema
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print("🛑 Deteniendo hilos de replicación...")
-        hilo_completo.detener()
-        hilo_diferencial.detener()
+        hilo1.detener()
+        hilo2.detener()
+        hilo3.detener()
+        hilo4.detener()
         print("✅ Programa finalizado.")
