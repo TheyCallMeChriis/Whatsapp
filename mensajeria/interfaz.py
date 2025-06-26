@@ -20,7 +20,7 @@ def iniciar_interfaz():
     ventana = tk.Tk()
     ventana.title("Registro")
     ventana.geometry("450x530")
-    ventana.configure(bg="#f0f4f8")
+    ventana.configure(bg="#8f949a")
     centrar_ventana(ventana)
 
     frame = tk.Frame(ventana, bg="white", padx=20, pady=20, bd=2, relief="groove")
@@ -54,7 +54,7 @@ def iniciar_interfaz():
             entry_password.get()
         )
 
-    tk.Button(frame, text="Registrarte", bg="#1e3a8a", fg="white", activebackground="#3b82f6",
+    tk.Button(frame, text="Registrarte", bg="#C3299C", fg="white", activebackground="#81366E",
               activeforeground="white", width=30, font=("Segoe UI", 10, "bold"), bd=0,
               padx=10, pady=6, command=registrar).pack(pady=10)
 
@@ -116,84 +116,138 @@ def mostrar_login():
 def mostrar_interfaz_principal():
     global ventana_chat
     ventana_chat = tk.Toplevel(ventana)
-    ventana_chat.title("Mensajería")
-    ventana_chat.geometry("900x600")
-    ventana_chat.configure(bg="#f0f4f8")
+    ventana_chat.title("Chat Principal")
+    ventana_chat.geometry("1000x700")
+    ventana_chat.configure(bg="#111b21")  # Fondo oscuro tipo WhatsApp
     centrar_ventana(ventana_chat)
 
+    # Menú
     menubar = tk.Menu(ventana_chat)
     cuenta_menu = tk.Menu(menubar, tearoff=0)
     cuenta_menu.add_command(label="Cerrar sesión", command=cerrar_sesion_usuario)
     menubar.add_cascade(label="Inicio", menu=cuenta_menu)
     ventana_chat.config(menu=menubar)
 
-    frame_principal = tk.Frame(ventana_chat, bg="#e5e7eb")
+    frame_principal = tk.Frame(ventana_chat, bg="#111b21")
     frame_principal.pack(fill="both", expand=True)
 
-    panel_contactos = tk.Frame(frame_principal, bg="white", width=250, bd=1, relief="sunken")
+    # Panel de contactos
+    panel_contactos = tk.Frame(frame_principal, bg="#2a2f32", width=300)
     panel_contactos.pack(side="left", fill="y")
+    panel_contactos.pack_propagate(False)
 
-    tk.Label(panel_contactos, text="Contactos", font=("Segoe UI", 12, "bold"), bg="white", fg="#1e3a8a").pack(pady=10)
-    lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 10), width=30, bd=1, relief="solid")
-    lista_contactos.pack(padx=10, pady=5, fill="y", expand=True)
+    tk.Label(panel_contactos, text="Chats", font=("Segoe UI", 16, "bold"),
+             bg="#2a2f32", fg="#e9edef", pady=15).pack(anchor="w", padx=20)
 
-    usuarios = obtener_usuarios()
+    lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 11), bg="#2a2f32", fg="#e9edef",
+                                 highlightthickness=0, bd=0, selectbackground="#3b4a54", selectforeground="#ffffff",
+                                 activestyle="none")
+    lista_contactos.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+    usuarios = obtener_usuarios(usuario_id)
     contactos_dict = {}
 
     for idx, usuario in enumerate(usuarios):
         nombre_completo = f"{usuario.Nombre} {usuario.Apellido}"
-        lista_contactos.insert(tk.END, nombre_completo)
+        lista_contactos.insert(tk.END, f"  👤 {nombre_completo}")
         contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
 
-    panel_chat = tk.Frame(frame_principal, bg="white", bd=1, relief="sunken")
+    # Panel del chat
+    panel_chat = tk.Frame(frame_principal, bg="#0b141a")
     panel_chat.pack(side="right", fill="both", expand=True)
 
-    tk.Label(panel_chat, text=f"Usuario ID: {usuario_id}", font=("Segoe UI", 10), bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
+    # Área de mensajes
+    frame_mensajes = tk.Frame(panel_chat, bg="#0b141a")
+    frame_mensajes.pack(fill="both", expand=True, padx=10, pady=(10, 0))
 
-    text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#f9fafb", fg="#1f2937",
-                        font=("Segoe UI", 10), bd=1, relief="solid")
-    text_chat.pack(padx=10, pady=(0, 5), fill="both", expand=True)
+    canvas_chat = tk.Canvas(frame_mensajes, bg="#0b141a", highlightthickness=0)
+    scroll_frame = tk.Frame(canvas_chat, bg="#0b141a")
+    scrollbar = tk.Scrollbar(frame_mensajes, orient="vertical", command=canvas_chat.yview)
+    canvas_chat.configure(yscrollcommand=scrollbar.set)
+
+    canvas_chat.create_window((0, 0), window=scroll_frame, anchor='nw')
+    canvas_chat.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    scroll_frame.bind("<Configure>", lambda e: canvas_chat.configure(scrollregion=canvas_chat.bbox("all")))
+
+    # Entrada de mensaje
+    frame_input = tk.Frame(panel_chat, bg="#202c33", height=60)
+    frame_input.pack(fill="x")
+    frame_input.pack_propagate(False)
+
+    entry_mensaje = tk.Entry(frame_input, font=("Segoe UI", 11), bg="#2a3942", fg="#e9edef",
+                             relief="flat", insertbackground="#e9edef")
+    entry_mensaje.pack(side="left", fill="x", expand=True, ipady=6, padx=(10, 5))
+
+    btn_enviar = tk.Button(frame_input, text="➤", font=("Segoe UI", 12, "bold"), fg="white",
+                           bg="#005c4b", relief="flat", command=lambda: enviar())
+    btn_enviar.pack(side="right", padx=10)
+    btn_enviar.configure(cursor="hand2", activebackground="#004a3c")
+
+    # Función para crear burbujas
+    def crear_burbuja_mensaje(parent, texto, es_propio):
+        container = tk.Frame(parent, bg="#0b141a")
+        container.pack(fill="x", pady=3)
+
+        if es_propio:
+            # Frame alineador a la derecha
+            alineador = tk.Frame(container, bg="#0b141a")
+            alineador.pack(anchor="e", fill="x", expand=True)
+
+            burbuja = tk.Label(alineador, text=texto, bg="#005c4b", fg="#e9edef",
+                               font=("Segoe UI", 10), wraplength=400, justify="left",
+                               padx=12, pady=8, bd=0)
+            burbuja.pack(side="right", padx=(50, 10))  # Más cerca del borde derecho
+        else:
+        # Frame alineador a la izquierda
+            alineador = tk.Frame(container, bg="#0b141a")
+            alineador.pack(anchor="w", fill="x", expand=True)
+
+            burbuja = tk.Label(alineador, text=texto, bg="#202c33", fg="#e9edef",
+                               font=("Segoe UI", 10), wraplength=400, justify="left",
+                               padx=12, pady=8, bd=0)
+            burbuja.pack(side="left", padx=(10, 50))  # Más cerca del borde izquierdo
+
 
     def cargar_mensajes(event):
+        for widget in scroll_frame.winfo_children():
+            widget.destroy()
+
         seleccion = lista_contactos.curselection()
         if seleccion:
             idx = seleccion[0]
-            usuario_destino_id, nombre_contacto = contactos_dict[idx]
+            usuario_destino_id, _ = contactos_dict[idx]
             mensajes = obtener_mensajes(usuario_id, usuario_destino_id)
-            text_chat.config(state="normal")
-            text_chat.delete("1.0", tk.END)
+
             for m in mensajes:
-                remitente = "Tú" if m[1] == usuario_id else nombre_contacto
-                contenido = m[3]
-                text_chat.insert(tk.END, f"{remitente}: {contenido}\n")
-            text_chat.config(state="disabled")
+                es_propio = m[1] == usuario_id
+                crear_burbuja_mensaje(scroll_frame, m[3], es_propio)
 
-    lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
-
-    frame_mensaje = tk.Frame(panel_chat, bg="white")
-    frame_mensaje.pack(fill="x", padx=10, pady=5)
-
-    entry_mensaje = tk.Entry(frame_mensaje, font=("Segoe UI", 10), bg="#ffffff", fg="#111827",
-                             highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
-    entry_mensaje.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=4)
+            canvas_chat.update_idletasks()
+            canvas_chat.yview_moveto(1)
 
     def enviar():
         mensaje = entry_mensaje.get().strip()
         if not mensaje:
             return
+
         seleccion = lista_contactos.curselection()
         if not seleccion:
             messagebox.showwarning("Selecciona un contacto", "Debes seleccionar un contacto.")
             return
+
         idx = seleccion[0]
         usuario_destino_id, _ = contactos_dict[idx]
+
         registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
         entry_mensaje.delete(0, tk.END)
         cargar_mensajes(None)
 
-    tk.Button(frame_mensaje, text="Enviar", bg="#3b82f6", fg="white",
-              font=("Segoe UI", 10, "bold"), activebackground="#2563eb",
-              bd=0, padx=10, pady=5, command=enviar).pack(side="right", padx=(5, 0))
+    entry_mensaje.bind("<Return>", lambda e: (enviar(), "break"))
+
+    lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
+
 
 def cerrar_sesion_usuario():
     global ventana_chat, usuario_id

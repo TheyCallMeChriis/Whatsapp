@@ -1,16 +1,18 @@
 from bd import conectar_bd
 
-def obtener_usuarios():
+def obtener_usuarios(usuario_actual_id):
     try:
         conn = conectar_bd()
         cursor = conn.cursor()
         cursor.execute("EXEC sp_ObtenerUsuarios")
-        return cursor.fetchall()
+        usuarios = cursor.fetchall()
+        return [u for u in usuarios if u.UsuarioID != usuario_actual_id]
     except Exception as e:
         print("Error:", e)
         return []
     finally:
         conn.close()
+
 
 def obtener_mensajes(usuario_origen_id, usuario_destino_id):
     try:
