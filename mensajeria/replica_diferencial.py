@@ -18,7 +18,7 @@ class ReplicacionDiferencial:
             mysql_conn = mysql.connector.connect(
                 host="localhost",
                 user="root",
-                password="27186627",
+                password="root",
                 database="MensajeriaReplica"
             )
             mysql_cursor = mysql_conn.cursor()

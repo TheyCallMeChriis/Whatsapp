@@ -1,5 +1,0 @@
-instalar dependencias:
-pip install pyodbc mysql-connector-python
-
-
-python "C:\Users\keint\OneDrive\Escritorio\ScriptsPruebaPF\Code\replica_completa.py"
