@@ -1,4 +1,4 @@
-# replica_diferencial.py
+# replicacion_diferencial_Msql.py
 from datetime import datetime, timedelta
 import pyodbc
 import mysql.connector
@@ -6,7 +6,6 @@ import mysql.connector
 class ReplicacionDiferencialMySQLtoSQL:
     def replicar(self):
         try:
-            
             mysql_conn = mysql.connector.connect(
                 host="localhost",
                 user="root",
@@ -15,7 +14,6 @@ class ReplicacionDiferencialMySQLtoSQL:
             )
             mysql_cursor = mysql_conn.cursor()
 
-            
             sql_conn = pyodbc.connect(
                 "DRIVER={ODBC Driver 17 for SQL Server};"
                 "SERVER=localhost;"
@@ -28,7 +26,7 @@ class ReplicacionDiferencialMySQLtoSQL:
 
             un_minuto_atras = datetime.now() - timedelta(minutes=1)
 
-            
+            # Replicar Usuario
             mysql_cursor.execute("""
                 SELECT UsuarioID, Nombre, Apellido, Contrasenna, Correo, Estado, NumeroTelefono, Actualizado
                 FROM Usuario
@@ -46,16 +44,17 @@ class ReplicacionDiferencialMySQLtoSQL:
                         WHEN NOT MATCHED THEN
                             INSERT (UsuarioID, Nombre, Apellido, Contrasenna, Correo, Estado, NumeroTelefono, Actualizado)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                    """, datos[0:1] + datos[1:] + datos)  # Para MATCH y luego INSERT
+                    """, datos[0:1] + datos[1:] + datos)
                 except Exception as e:
                     print(f"❌ Error al replicar Usuario: {e}")
 
-            
+            # Replicar Mensaje
             mysql_cursor.execute("""
                 SELECT MensajeID, EmisorID, ReceptorID, MensajeEncriptado, FechaEnvio, Actualizado
                 FROM Mensaje
                 WHERE Actualizado >= %s
             """, (un_minuto_atras,))
+            sql_cursor.execute("SET IDENTITY_INSERT Mensaje ON")
             for row in mysql_cursor.fetchall():
                 datos = tuple(row)
                 try:
@@ -71,13 +70,15 @@ class ReplicacionDiferencialMySQLtoSQL:
                     """, datos[0:1] + datos[1:] + datos)
                 except Exception as e:
                     print(f"❌ Error al replicar Mensaje: {e}")
+            sql_cursor.execute("SET IDENTITY_INSERT Mensaje OFF")
 
-            
+            # Replicar Sesion
             mysql_cursor.execute("""
                 SELECT SesionID, UsuarioID, Token, FechaInicio, FechaFin, Activa
                 FROM Sesion
                 WHERE FechaInicio >= %s
             """, (un_minuto_atras,))
+            sql_cursor.execute("SET IDENTITY_INSERT Sesion ON")
             for row in mysql_cursor.fetchall():
                 datos = tuple(row)
                 try:
@@ -93,6 +94,7 @@ class ReplicacionDiferencialMySQLtoSQL:
                     """, datos[0:1] + datos[1:] + datos)
                 except Exception as e:
                     print(f"❌ Error al replicar Sesión: {e}")
+            sql_cursor.execute("SET IDENTITY_INSERT Sesion OFF")
 
             sql_conn.commit()
             print("✅ Replicación diferencial MySQL → SQL Server ejecutada correctamente.")

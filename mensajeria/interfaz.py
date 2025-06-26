@@ -7,6 +7,7 @@ from datetime import datetime
 usuario_id = None
 token = None
 ventana_chat = None
+contactos_dict = {}
 
 def centrar_ventana(win):
     win.update_idletasks()
@@ -54,6 +55,12 @@ def iniciar_interfaz():
             entry_telefono.get(),
             entry_password.get()
         )
+        messagebox.showinfo("Registrado", "Usuario registrado correctamente.")
+        entry_nombre.delete(0, tk.END)
+        entry_apellido.delete(0, tk.END)
+        entry_correo.delete(0, tk.END)
+        entry_telefono.delete(0, tk.END)
+        entry_password.delete(0, tk.END)
 
     tk.Button(frame, text="Registrarte", bg="#C3299C", fg="white", activebackground="#81366E",
               activeforeground="white", width=30, font=("Segoe UI", 10, "bold"), bd=0,
@@ -115,7 +122,7 @@ def mostrar_login():
     ).pack(pady=10)
 
 def mostrar_interfaz_principal():
-    global ventana_chat, canvas_chat, scroll_frame, lista_contactos, contactos_dict, entry_mensaje
+    global ventana_chat, canvas_chat, scroll_frame, lista_contactos, entry_mensaje
 
     ventana_chat = tk.Toplevel(ventana)
     ventana_chat.title("Chat Principal")
@@ -125,6 +132,8 @@ def mostrar_interfaz_principal():
 
     menubar = tk.Menu(ventana_chat)
     cuenta_menu = tk.Menu(menubar, tearoff=0)
+    cuenta_menu.add_command(label="Recargar contactos", command=recargar_contactos)
+    cuenta_menu.add_separator()
     cuenta_menu.add_command(label="Cerrar sesión", command=cerrar_sesion_usuario)
     menubar.add_cascade(label="Inicio", menu=cuenta_menu)
     ventana_chat.config(menu=menubar)
@@ -144,13 +153,7 @@ def mostrar_interfaz_principal():
                                  activestyle="none")
     lista_contactos.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
-    usuarios = obtener_usuarios(usuario_id)
-    contactos_dict = {}
-
-    for idx, usuario in enumerate(usuarios):
-        nombre_completo = f"{usuario.Nombre} {usuario.Apellido}"
-        lista_contactos.insert(tk.END, f"  👤 {nombre_completo}")
-        contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
+    recargar_contactos()
 
     panel_chat = tk.Frame(frame_principal, bg="#0b141a")
     panel_chat.pack(side="right", fill="both", expand=True)
@@ -182,57 +185,46 @@ def mostrar_interfaz_principal():
     btn_enviar.pack(side="right", padx=10)
     btn_enviar.configure(cursor="hand2", activebackground="#004a3c")
 
-    # Bindings
     entry_mensaje.bind("<Return>", lambda e: (enviar(), "break"))
     lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
 
+def recargar_contactos():
+    global contactos_dict
+    lista_contactos.delete(0, tk.END)
+    usuarios = obtener_usuarios(usuario_id)
+    contactos_dict = {}
+    for idx, usuario in enumerate(usuarios):
+        nombre_completo = f"{usuario.Nombre} {usuario.Apellido}"
+        lista_contactos.insert(tk.END, f"  👤 {nombre_completo}")
+        contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
+
 def crear_burbuja_mensaje(parent, texto, es_propio, remitente="", fecha_envio=None):
     hora = fecha_envio.strftime("%H:%M") if fecha_envio else datetime.now().strftime("%H:%M")
-    
+
     container = tk.Frame(parent, bg="#0b141a")
     container.pack(fill="x", pady=5, padx=10)
 
     alineador = tk.Frame(container, bg="#0b141a")
     alineador.pack(fill="x")
 
-    
     max_width = 500
-
     if es_propio:
         burbuja = tk.Frame(alineador, bg="#005c4b", padx=10, pady=5)
-        burbuja.pack(anchor="e", padx=(100, 10))  
+        burbuja.pack(anchor="e", padx=(100, 10))
     else:
         burbuja = tk.Frame(alineador, bg="#202c33", padx=10, pady=5)
-        burbuja.pack(anchor="w", padx=(10, 100))  
+        burbuja.pack(anchor="w", padx=(10, 100))
 
     if remitente:
-        tk.Label(
-            burbuja,
-            text=remitente,
-            bg=burbuja["bg"],
-            fg="#c0f5e2" if es_propio else "#8db2cc",
-            font=("Segoe UI", 8, "bold"),
-            wraplength=max_width,
-            justify="left"
-        ).pack(anchor="e" if es_propio else "w")
+        tk.Label(burbuja, text=remitente, bg=burbuja["bg"],
+                 fg="#c0f5e2" if es_propio else "#8db2cc",
+                 font=("Segoe UI", 8, "bold"), wraplength=max_width, justify="left").pack(anchor="e" if es_propio else "w")
 
-    tk.Label(
-        burbuja,
-        text=texto,
-        bg=burbuja["bg"],
-        fg="white",
-        wraplength=max_width,  
-        justify="left",
-        font=("Segoe UI", 10)
-    ).pack(anchor="e" if es_propio else "w")
+    tk.Label(burbuja, text=texto, bg=burbuja["bg"], fg="white",
+             wraplength=max_width, justify="left", font=("Segoe UI", 10)).pack(anchor="e" if es_propio else "w")
 
-    tk.Label(
-        burbuja,
-        text=hora,
-        bg=burbuja["bg"],
-        fg="#b0d6c7" if es_propio else "#98a7af",
-        font=("Segoe UI", 7)
-    ).pack(anchor="e")
+    tk.Label(burbuja, text=hora, bg=burbuja["bg"],
+             fg="#b0d6c7" if es_propio else "#98a7af", font=("Segoe UI", 7)).pack(anchor="e")
 
 def cargar_mensajes(event):
     for widget in scroll_frame.winfo_children():
@@ -264,7 +256,6 @@ def enviar():
 
     idx = seleccion[0]
     usuario_destino_id, _ = contactos_dict[idx]
-
     registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
     entry_mensaje.delete(0, tk.END)
     cargar_mensajes(None)
