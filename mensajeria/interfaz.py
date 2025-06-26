@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from autentication import registrar_usuario, iniciar_sesion, cerrar_sesion
 from mensajeria import obtener_usuarios, obtener_mensajes, registrar_mensaje
+
 usuario_id = None
 token = None
 ventana_chat = None
@@ -19,32 +20,29 @@ def iniciar_interfaz():
     ventana = tk.Tk()
     ventana.title("Registro")
     ventana.geometry("450x530")
-    ventana.configure(bg="#DDEAFE")
+    ventana.configure(bg="#f0f4f8")
     centrar_ventana(ventana)
 
-    frame = tk.Frame(ventana, bg="white", padx=20, pady=20)
+    frame = tk.Frame(ventana, bg="white", padx=20, pady=20, bd=2, relief="groove")
     frame.pack(pady=30)
 
-    tk.Label(frame, text="Regístrate", font=("Segoe UI", 16, "bold"), bg="white").pack(pady=10)
+    tk.Label(frame, text="Regístrate", font=("Segoe UI", 18, "bold"), fg="#1e3a8a", bg="white").pack(pady=10)
 
-    tk.Label(frame, text="👤 Nombre", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_nombre = tk.Entry(frame, width=35)
-    entry_nombre.pack(pady=(0, 10))
+    def crear_entrada(texto):
+        tk.Label(frame, text=texto, font=("Segoe UI", 10), fg="#374151", bg="white").pack(anchor="w")
+        entry = tk.Entry(frame, width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
+                         highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
+        entry.pack(pady=(0, 10))
+        return entry
 
-    tk.Label(frame, text="👥 Apellido", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_apellido = tk.Entry(frame, width=35)
-    entry_apellido.pack(pady=(0, 10))
+    entry_nombre = crear_entrada("👤 Nombre")
+    entry_apellido = crear_entrada("👥 Apellido")
+    entry_correo = crear_entrada("📧 Correo")
+    entry_telefono = crear_entrada("📞 Teléfono")
 
-    tk.Label(frame, text="📧 Correo", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_correo = tk.Entry(frame, width=35)
-    entry_correo.pack(pady=(0, 10))
-
-    tk.Label(frame, text="📞 Teléfono", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_telefono = tk.Entry(frame, width=35)
-    entry_telefono.pack(pady=(0, 10))
-
-    tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_password = tk.Entry(frame, show="*", width=35)
+    tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), fg="#374151", bg="white").pack(anchor="w")
+    entry_password = tk.Entry(frame, show="*", width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
+                              highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_password.pack(pady=(0, 15))
 
     def registrar():
@@ -56,32 +54,35 @@ def iniciar_interfaz():
             entry_password.get()
         )
 
-    tk.Button(frame, text="Registrarte", bg="#0D1A2B", fg="white", width=30,
-              font=("Segoe UI", 10, "bold"), command=registrar).pack(pady=10)
+    tk.Button(frame, text="Registrarte", bg="#1e3a8a", fg="white", activebackground="#3b82f6",
+              activeforeground="white", width=30, font=("Segoe UI", 10, "bold"), bd=0,
+              padx=10, pady=6, command=registrar).pack(pady=10)
 
-    tk.Button(frame, text="¿Ya tienes una cuenta? Iniciar Sesión", bg="white", fg="#0D6EFD", bd=0,
-              font=("Segoe UI", 9, "bold"), command=mostrar_login).pack()
+    tk.Button(frame, text="¿Ya tienes una cuenta? Iniciar Sesión", bg="white", fg="#3b82f6", bd=0,
+              font=("Segoe UI", 9, "bold"), cursor="hand2", command=mostrar_login).pack()
 
     ventana.mainloop()
 
 def mostrar_login():
     login_win = tk.Toplevel(ventana)
     login_win.title("Iniciar sesión")
-    login_win.geometry("400x300")
-    login_win.configure(bg="#EAF0FA")
+    login_win.geometry("450x380")
+    login_win.configure(bg="#3b434a")
     centrar_ventana(login_win)
 
-    frame = tk.Frame(login_win, bg="white", padx=20, pady=20)
+    frame = tk.Frame(login_win, bg="white", padx=20, pady=20, bd=2, relief="groove")
     frame.pack(pady=30)
 
-    tk.Label(frame, text="Iniciar sesión", font=("Segoe UI", 16, "bold"), bg="white").pack(pady=10)
+    tk.Label(frame, text="Iniciar sesión", font=("Segoe UI", 16, "bold"), fg="#1d1ae4", bg="white").pack(pady=10)
 
     tk.Label(frame, text="📧 Correo electrónico", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_login_correo = tk.Entry(frame, width=35)
+    entry_login_correo = tk.Entry(frame, width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
+                                  highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_login_correo.pack(pady=(0, 10))
 
     tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), bg="white").pack(anchor="w")
-    entry_login_pass = tk.Entry(frame, show="*", width=35)
+    entry_login_pass = tk.Entry(frame, show="*", width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
+                                highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_login_pass.pack(pady=(0, 15))
 
     def login():
@@ -96,15 +97,28 @@ def mostrar_login():
         else:
             messagebox.showerror("Error", "Credenciales incorrectas o usuario no encontrado.")
 
-    tk.Button(frame, text="Iniciar sesión", bg="#0D1A2B", fg="white", width=30,
-              font=("Segoe UI", 10, "bold"), command=login).pack(pady=10)
+    tk.Button(
+    frame,
+    text="Iniciar sesión",
+    bg="#C3299C",            # Mismo fondo oscuro
+    fg="white",              # Texto blanco
+    activebackground="#1f2937",  # Color al presionar
+    activeforeground="white",
+    width=30,
+    font=("Segoe UI", 10, "bold"),
+    bd=0,
+    padx=10,
+    pady=6,
+    cursor="hand2",
+    command=login
+).pack(pady=10)
 
 def mostrar_interfaz_principal():
     global ventana_chat
     ventana_chat = tk.Toplevel(ventana)
     ventana_chat.title("Mensajería")
     ventana_chat.geometry("900x600")
-    ventana_chat.configure(bg="white")
+    ventana_chat.configure(bg="#f0f4f8")
     centrar_ventana(ventana_chat)
 
     menubar = tk.Menu(ventana_chat)
@@ -113,14 +127,14 @@ def mostrar_interfaz_principal():
     menubar.add_cascade(label="Inicio", menu=cuenta_menu)
     ventana_chat.config(menu=menubar)
 
-    frame_principal = tk.Frame(ventana_chat, bg="gray")
+    frame_principal = tk.Frame(ventana_chat, bg="#e5e7eb")
     frame_principal.pack(fill="both", expand=True)
 
-    panel_contactos = tk.Frame(frame_principal, bg="#F1F1F1", width=250)
+    panel_contactos = tk.Frame(frame_principal, bg="white", width=250, bd=1, relief="sunken")
     panel_contactos.pack(side="left", fill="y")
 
-    tk.Label(panel_contactos, text="Contactos", font=("Segoe UI", 12, "bold"), bg="#F1F1F1").pack(pady=10)
-    lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 10), width=30)
+    tk.Label(panel_contactos, text="Contactos", font=("Segoe UI", 12, "bold"), bg="white", fg="#1e3a8a").pack(pady=10)
+    lista_contactos = tk.Listbox(panel_contactos, font=("Segoe UI", 10), width=30, bd=1, relief="solid")
     lista_contactos.pack(padx=10, pady=5, fill="y", expand=True)
 
     usuarios = obtener_usuarios()
@@ -131,12 +145,13 @@ def mostrar_interfaz_principal():
         lista_contactos.insert(tk.END, nombre_completo)
         contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
 
-    panel_chat = tk.Frame(frame_principal, bg="white")
+    panel_chat = tk.Frame(frame_principal, bg="white", bd=1, relief="sunken")
     panel_chat.pack(side="right", fill="both", expand=True)
 
-    tk.Label(panel_chat, text=f"Usuario ID: {usuario_id}", font=("Segoe UI", 10), bg="white").pack(padx=10, pady=5)
+    tk.Label(panel_chat, text=f"Usuario ID: {usuario_id}", font=("Segoe UI", 10), bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
 
-    text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#FAFAFA", font=("Segoe UI", 10))
+    text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#f9fafb", fg="#1f2937",
+                        font=("Segoe UI", 10), bd=1, relief="solid")
     text_chat.pack(padx=10, pady=(0, 5), fill="both", expand=True)
 
     def cargar_mensajes(event):
@@ -158,7 +173,8 @@ def mostrar_interfaz_principal():
     frame_mensaje = tk.Frame(panel_chat, bg="white")
     frame_mensaje.pack(fill="x", padx=10, pady=5)
 
-    entry_mensaje = tk.Entry(frame_mensaje, font=("Segoe UI", 10))
+    entry_mensaje = tk.Entry(frame_mensaje, font=("Segoe UI", 10), bg="#ffffff", fg="#111827",
+                             highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_mensaje.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=4)
 
     def enviar():
@@ -175,8 +191,9 @@ def mostrar_interfaz_principal():
         entry_mensaje.delete(0, tk.END)
         cargar_mensajes(None)
 
-    tk.Button(frame_mensaje, text="Enviar", bg="#0D6EFD", fg="white",
-              font=("Segoe UI", 10, "bold"), command=enviar).pack(side="right", padx=(5, 0))
+    tk.Button(frame_mensaje, text="Enviar", bg="#3b82f6", fg="white",
+              font=("Segoe UI", 10, "bold"), activebackground="#2563eb",
+              bd=0, padx=10, pady=5, command=enviar).pack(side="right", padx=(5, 0))
 
 def cerrar_sesion_usuario():
     global ventana_chat, usuario_id
