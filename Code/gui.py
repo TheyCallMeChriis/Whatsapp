@@ -6,11 +6,15 @@ import pyodbc
 
 def conectar_bd():
     return pyodbc.connect(
+        
         "DRIVER={ODBC Driver 17 for SQL Server};"
         "SERVER=localhost;"
         "DATABASE=MensajeriaBD;"
-        "Trusted_Connection=yes;"
+        "Trusted_Connection=yes;",
+        autocommit=True
+        
     )
+
 
 
 #--------- Metodo para obtener Mensajes Chris
@@ -151,6 +155,15 @@ def mostrar_interfaz_principal(usuario_id, token):
     ventana_chat.configure(bg="white")
     centrar_ventana(ventana_chat)
 
+    # ---------------------- MENÚ BAR ----------------------
+    menubar = tk.Menu(ventana_chat)
+
+    cuenta_menu = tk.Menu(menubar, tearoff=0)
+    cuenta_menu.add_command(label="Cerrar sesión", command=lambda: cerrar_sesion())
+    menubar.add_cascade(label="Inicio", menu=cuenta_menu)
+
+    ventana_chat.config(menu=menubar)
+
     # ---------------------- FRAME PRINCIPAL ----------------------
     frame_principal = tk.Frame(ventana_chat, bg="gray", width=900, height=600)
     frame_principal.pack(fill="both", expand=True)
@@ -182,7 +195,7 @@ def mostrar_interfaz_principal(usuario_id, token):
 
     text_chat = tk.Text(panel_chat, state="disabled", wrap="word", bg="#FAFAFA", font=("Segoe UI", 10))
     text_chat.pack(padx=10, pady=(0, 5), fill="both", expand=True)
- 
+
     # ---------------------- FUNCIÓN PARA CARGAR MENSAJES ----------------------
     def cargar_mensajes(event):
         seleccion = lista_contactos.curselection()
@@ -201,7 +214,6 @@ def mostrar_interfaz_principal(usuario_id, token):
 
             text_chat.config(state="disabled")
 
-    # ✅ Aquí es donde se conecta el evento con la función
     lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
 
     # ---------------------- ZONA DE ESCRITURA ----------------------
@@ -211,6 +223,49 @@ def mostrar_interfaz_principal(usuario_id, token):
     entry_mensaje = tk.Entry(frame_mensaje, font=("Segoe UI", 10))
     entry_mensaje.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=4)
 
+    def enviar_mensaje():
+        mensaje = entry_mensaje.get().strip()
+        if mensaje:
+            seleccion = lista_contactos.curselection()
+            if not seleccion:
+                messagebox.showwarning("Selecciona un contacto", "Debes seleccionar un contacto antes de enviar un mensaje.")
+                return
+
+            idx = seleccion[0]
+            usuario_destino_id, nombre_contacto = contactos_dict[idx]
+
+            registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
+
+            entry_mensaje.delete(0, tk.END)
+            cargar_mensajes(None)  # Refrescar mensajes
+
+    def registrar_mensaje(remitente_id, destinatario_id, mensajeTexto):
+        try:
+            conn = conectar_bd()
+            cursor = conn.cursor()
+            cursor.execute("EXEC sp_EnviarMensaje ?, ?, ?", remitente_id, destinatario_id, mensajeTexto)
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo enviar el mensaje: {e}")
+
+    boton_enviar = tk.Button(
+        frame_mensaje,
+        text="Enviar",
+        bg="#0D6EFD",
+        fg="white",
+        font=("Segoe UI", 10, "bold"),
+        command=enviar_mensaje
+    )
+    boton_enviar.pack(side="right", padx=(5, 0))
+
+    def cerrar_sesion():
+        confirmacion = messagebox.askyesno("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?")
+        if confirmacion:
+            ventana_chat.destroy()
+            messagebox.showinfo("Sesión cerrada", "Has cerrado sesión exitosamente.")
+
+    
     def enviar_mensaje():
         mensaje = entry_mensaje.get().strip()
         if mensaje:
@@ -247,6 +302,19 @@ def mostrar_interfaz_principal(usuario_id, token):
     command=enviar_mensaje
 )
     boton_enviar.pack(side="right", padx=(5, 0))
+
+# Botón para cerrar sesión
+   # boton_cerrar_sesion = tk.Button(
+   #     panel_chat,
+   #     text="Cerrar sesión",
+   #     bg="#D9534F",
+   #     fg="white",
+   #     font=("Segoe UI", 10, "bold"),
+   #     width=20,
+   #     command=cerrar_sesion
+   # )
+   # boton_cerrar_sesion.pack(side="bottom", fill="x", padx=10, pady=5)
+
         
 # ---------------------------- INTERFAZ DE REGISTRO ----------------------------
 
