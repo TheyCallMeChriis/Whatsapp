@@ -8,7 +8,7 @@ import time
 import threading
 
 if __name__ == "__main__":
-    # Iniciar hilos de replicación
+    
     replicacion_completa = Replicacion()
     replicacion_diferencial = ReplicacionDiferencial()
 
@@ -18,13 +18,11 @@ if __name__ == "__main__":
     hilo_completo.iniciar()
     hilo_diferencial.iniciar()
 
-    # Iniciar la interfaz gráfica
     try:
         iniciar_interfaz()
     except KeyboardInterrupt:
         print("🛑 Interfaz interrumpida manualmente.")
 
-    # Esperar fin de ejecución o cierre
     try:
         while True:
             time.sleep(1)

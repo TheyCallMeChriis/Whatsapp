@@ -40,14 +40,14 @@ CREATE TABLE Sesion (
 );
 GO
 
--- INSERTs de usuarios
+
 INSERT INTO Usuario (Nombre, Apellido, Contrasenna, Correo, NumeroTelefono)
 VALUES
 ('Ana', 'Gómez', CONVERT(VARBINARY(128), 'clave123'), 'ana@example.com', '88881111'),
 ('Luis', 'Ramírez', CONVERT(VARBINARY(128), 'secreto456'), 'luis@example.com', '88882222'),
 ('Maria', 'López', CONVERT(VARBINARY(128), 'pass789'), 'maria@example.com', '88883333');
 
--- INSERTs de mensajes (Emisor → Receptor)
+
 INSERT INTO Mensaje (EmisorID, ReceptorID, MensajeEncriptado)
 VALUES
 (1, 2, CONVERT(VARBINARY(128), 'Hola Luis!')),

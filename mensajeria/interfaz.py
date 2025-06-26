@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from autentication import registrar_usuario, iniciar_sesion, cerrar_sesion
 from mensajeria import obtener_usuarios, obtener_mensajes, registrar_mensaje
+from datetime import datetime
 
 usuario_id = None
 token = None
@@ -40,7 +41,7 @@ def iniciar_interfaz():
     entry_correo = crear_entrada("📧 Correo")
     entry_telefono = crear_entrada("📞 Teléfono")
 
-    tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), fg="#374151", bg="white").pack(anchor="w")
+    tk.Label(frame, text="🔐 Contraseña", font=("Segoe UI", 10), fg="#374151", bg="white").pack(anchor="w")
     entry_password = tk.Entry(frame, show="*", width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
                               highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_password.pack(pady=(0, 15))
@@ -80,7 +81,7 @@ def mostrar_login():
                                   highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_login_correo.pack(pady=(0, 10))
 
-    tk.Label(frame, text="🔒 Contraseña", font=("Segoe UI", 10), bg="white").pack(anchor="w")
+    tk.Label(frame, text="🔐 Contraseña", font=("Segoe UI", 10), bg="white").pack(anchor="w")
     entry_login_pass = tk.Entry(frame, show="*", width=35, bg="#f9fafb", fg="#111827", insertbackground="#111827",
                                 highlightthickness=1, highlightbackground="#d1d5db", relief="flat")
     entry_login_pass.pack(pady=(0, 15))
@@ -98,30 +99,30 @@ def mostrar_login():
             messagebox.showerror("Error", "Credenciales incorrectas o usuario no encontrado.")
 
     tk.Button(
-    frame,
-    text="Iniciar sesión",
-    bg="#C3299C",            # Mismo fondo oscuro
-    fg="white",              # Texto blanco
-    activebackground="#1f2937",  # Color al presionar
-    activeforeground="white",
-    width=30,
-    font=("Segoe UI", 10, "bold"),
-    bd=0,
-    padx=10,
-    pady=6,
-    cursor="hand2",
-    command=login
-).pack(pady=10)
+        frame,
+        text="Iniciar sesión",
+        bg="#C3299C",
+        fg="white",
+        activebackground="#1f2937",
+        activeforeground="white",
+        width=30,
+        font=("Segoe UI", 10, "bold"),
+        bd=0,
+        padx=10,
+        pady=6,
+        cursor="hand2",
+        command=login
+    ).pack(pady=10)
 
 def mostrar_interfaz_principal():
-    global ventana_chat
+    global ventana_chat, canvas_chat, scroll_frame, lista_contactos, contactos_dict, entry_mensaje
+
     ventana_chat = tk.Toplevel(ventana)
     ventana_chat.title("Chat Principal")
     ventana_chat.geometry("1000x700")
-    ventana_chat.configure(bg="#111b21")  # Fondo oscuro tipo WhatsApp
+    ventana_chat.configure(bg="#111b21")
     centrar_ventana(ventana_chat)
 
-    # Menú
     menubar = tk.Menu(ventana_chat)
     cuenta_menu = tk.Menu(menubar, tearoff=0)
     cuenta_menu.add_command(label="Cerrar sesión", command=cerrar_sesion_usuario)
@@ -131,7 +132,6 @@ def mostrar_interfaz_principal():
     frame_principal = tk.Frame(ventana_chat, bg="#111b21")
     frame_principal.pack(fill="both", expand=True)
 
-    # Panel de contactos
     panel_contactos = tk.Frame(frame_principal, bg="#2a2f32", width=300)
     panel_contactos.pack(side="left", fill="y")
     panel_contactos.pack_propagate(False)
@@ -152,11 +152,9 @@ def mostrar_interfaz_principal():
         lista_contactos.insert(tk.END, f"  👤 {nombre_completo}")
         contactos_dict[idx] = (usuario.UsuarioID, nombre_completo)
 
-    # Panel del chat
     panel_chat = tk.Frame(frame_principal, bg="#0b141a")
     panel_chat.pack(side="right", fill="both", expand=True)
 
-    # Área de mensajes
     frame_mensajes = tk.Frame(panel_chat, bg="#0b141a")
     frame_mensajes.pack(fill="both", expand=True, padx=10, pady=(10, 0))
 
@@ -171,7 +169,6 @@ def mostrar_interfaz_principal():
 
     scroll_frame.bind("<Configure>", lambda e: canvas_chat.configure(scrollregion=canvas_chat.bbox("all")))
 
-    # Entrada de mensaje
     frame_input = tk.Frame(panel_chat, bg="#202c33", height=60)
     frame_input.pack(fill="x")
     frame_input.pack_propagate(False)
@@ -181,73 +178,96 @@ def mostrar_interfaz_principal():
     entry_mensaje.pack(side="left", fill="x", expand=True, ipady=6, padx=(10, 5))
 
     btn_enviar = tk.Button(frame_input, text="➤", font=("Segoe UI", 12, "bold"), fg="white",
-                           bg="#005c4b", relief="flat", command=lambda: enviar())
+                           bg="#005c4b", relief="flat", command=enviar)
     btn_enviar.pack(side="right", padx=10)
     btn_enviar.configure(cursor="hand2", activebackground="#004a3c")
 
-    # Función para crear burbujas
-    def crear_burbuja_mensaje(parent, texto, es_propio):
-        container = tk.Frame(parent, bg="#0b141a")
-        container.pack(fill="x", pady=3)
-
-        if es_propio:
-            # Frame alineador a la derecha
-            alineador = tk.Frame(container, bg="#0b141a")
-            alineador.pack(anchor="e", fill="x", expand=True)
-
-            burbuja = tk.Label(alineador, text=texto, bg="#005c4b", fg="#e9edef",
-                               font=("Segoe UI", 10), wraplength=400, justify="left",
-                               padx=12, pady=8, bd=0)
-            burbuja.pack(side="right", padx=(50, 10))  # Más cerca del borde derecho
-        else:
-        # Frame alineador a la izquierda
-            alineador = tk.Frame(container, bg="#0b141a")
-            alineador.pack(anchor="w", fill="x", expand=True)
-
-            burbuja = tk.Label(alineador, text=texto, bg="#202c33", fg="#e9edef",
-                               font=("Segoe UI", 10), wraplength=400, justify="left",
-                               padx=12, pady=8, bd=0)
-            burbuja.pack(side="left", padx=(10, 50))  # Más cerca del borde izquierdo
-
-
-    def cargar_mensajes(event):
-        for widget in scroll_frame.winfo_children():
-            widget.destroy()
-
-        seleccion = lista_contactos.curselection()
-        if seleccion:
-            idx = seleccion[0]
-            usuario_destino_id, _ = contactos_dict[idx]
-            mensajes = obtener_mensajes(usuario_id, usuario_destino_id)
-
-            for m in mensajes:
-                es_propio = m[1] == usuario_id
-                crear_burbuja_mensaje(scroll_frame, m[3], es_propio)
-
-            canvas_chat.update_idletasks()
-            canvas_chat.yview_moveto(1)
-
-    def enviar():
-        mensaje = entry_mensaje.get().strip()
-        if not mensaje:
-            return
-
-        seleccion = lista_contactos.curselection()
-        if not seleccion:
-            messagebox.showwarning("Selecciona un contacto", "Debes seleccionar un contacto.")
-            return
-
-        idx = seleccion[0]
-        usuario_destino_id, _ = contactos_dict[idx]
-
-        registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
-        entry_mensaje.delete(0, tk.END)
-        cargar_mensajes(None)
-
+    # Bindings
     entry_mensaje.bind("<Return>", lambda e: (enviar(), "break"))
-
     lista_contactos.bind("<<ListboxSelect>>", cargar_mensajes)
 
+def crear_burbuja_mensaje(parent, texto, es_propio, remitente="", fecha_envio=None):
+    hora = fecha_envio.strftime("%H:%M") if fecha_envio else datetime.now().strftime("%H:%M")
+    
+    container = tk.Frame(parent, bg="#0b141a")
+    container.pack(fill="x", pady=5, padx=10)
+
+    alineador = tk.Frame(container, bg="#0b141a")
+    alineador.pack(fill="x")
+
+    
+    max_width = 500
+
+    if es_propio:
+        burbuja = tk.Frame(alineador, bg="#005c4b", padx=10, pady=5)
+        burbuja.pack(anchor="e", padx=(100, 10))  
+    else:
+        burbuja = tk.Frame(alineador, bg="#202c33", padx=10, pady=5)
+        burbuja.pack(anchor="w", padx=(10, 100))  
+
+    if remitente:
+        tk.Label(
+            burbuja,
+            text=remitente,
+            bg=burbuja["bg"],
+            fg="#c0f5e2" if es_propio else "#8db2cc",
+            font=("Segoe UI", 8, "bold"),
+            wraplength=max_width,
+            justify="left"
+        ).pack(anchor="e" if es_propio else "w")
+
+    tk.Label(
+        burbuja,
+        text=texto,
+        bg=burbuja["bg"],
+        fg="white",
+        wraplength=max_width,  
+        justify="left",
+        font=("Segoe UI", 10)
+    ).pack(anchor="e" if es_propio else "w")
+
+    tk.Label(
+        burbuja,
+        text=hora,
+        bg=burbuja["bg"],
+        fg="#b0d6c7" if es_propio else "#98a7af",
+        font=("Segoe UI", 7)
+    ).pack(anchor="e")
+
+def cargar_mensajes(event):
+    for widget in scroll_frame.winfo_children():
+        widget.destroy()
+
+    seleccion = lista_contactos.curselection()
+    if seleccion:
+        idx = seleccion[0]
+        usuario_destino_id, nombre_contacto = contactos_dict[idx]
+        mensajes = obtener_mensajes(usuario_id, usuario_destino_id)
+
+        for m in mensajes:
+            es_propio = m[1] == usuario_id
+            remitente = "Tú" if es_propio else nombre_contacto
+            crear_burbuja_mensaje(scroll_frame, m[3], es_propio, remitente, m[5])
+
+        canvas_chat.update_idletasks()
+        canvas_chat.yview_moveto(1)
+
+def enviar():
+    mensaje = entry_mensaje.get().strip()
+    if not mensaje:
+        return
+
+    seleccion = lista_contactos.curselection()
+    if not seleccion:
+        messagebox.showwarning("Selecciona un contacto", "Debes seleccionar un contacto.")
+        return
+
+    idx = seleccion[0]
+    usuario_destino_id, _ = contactos_dict[idx]
+
+    registrar_mensaje(usuario_id, usuario_destino_id, mensaje)
+    entry_mensaje.delete(0, tk.END)
+    cargar_mensajes(None)
 
 def cerrar_sesion_usuario():
     global ventana_chat, usuario_id

@@ -9,7 +9,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Abrir la llave sim�trica si a�n no est� abierta
+    
     IF NOT EXISTS (
         SELECT * FROM sys.openkeys WHERE key_name = 'Usuario_Key_01'
     )
@@ -18,7 +18,7 @@ BEGIN
         DECRYPTION BY CERTIFICATE Usuario_KEY_CERT;
     END
 
-    -- Obtener mensajes desencriptados entre el emisor y receptor
+    
     SELECT 
         m.MensajeID,
         m.EmisorID,
@@ -32,7 +32,7 @@ BEGIN
        OR (m.EmisorID = @param_ReceptorID AND m.ReceptorID = @param_EmisorID)
     ORDER BY m.FechaEnvio ASC;
 
-    -- Cerrar la llave despu�s de usarla
+   
     CLOSE SYMMETRIC KEY Usuario_Key_01;
 END;
 GO

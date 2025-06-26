@@ -5,7 +5,7 @@ import mysql.connector
 class ReplicacionDiferencial:
     def replicar(self):
         try:
-            # Conexión a SQL Server
+            
             sql_conn = pyodbc.connect(
                 "DRIVER={ODBC Driver 17 for SQL Server};"
                 "SERVER=localhost;"
@@ -14,7 +14,7 @@ class ReplicacionDiferencial:
             )
             sql_cursor = sql_conn.cursor()
 
-            # Conexión a MySQL
+           
             mysql_conn = mysql.connector.connect(
                 host="localhost",
                 user="root",
@@ -25,10 +25,10 @@ class ReplicacionDiferencial:
 
             print("🔄 Iniciando replicación diferencial...")
 
-            # Calcular fecha límite (1 minuto atrás)
+            
             un_minuto_atras = datetime.now() - timedelta(minutes=1)
 
-            # ---------- Usuario ----------
+            
             sql_cursor.execute("""
                 SELECT UsuarioID, Nombre, Apellido, Contrasenna, Correo, Estado, NumeroTelefono, Actualizado
                 FROM Usuario
@@ -51,7 +51,6 @@ class ReplicacionDiferencial:
                 except Exception as e:
                     print(f"❌ Error al insertar/actualizar Usuario: {e}")
 
-            # ---------- Mensaje ----------
             sql_cursor.execute("""
                 SELECT MensajeID, EmisorID, ReceptorID, MensajeEncriptado, FechaEnvio, Actualizado
                 FROM Mensaje
@@ -70,7 +69,7 @@ class ReplicacionDiferencial:
                 except Exception as e:
                     print(f"❌ Error al insertar/actualizar Mensaje: {e}")
 
-            # ---------- Sesion ----------
+            
             sql_cursor.execute("""
                 SELECT SesionID, UsuarioID, Token, FechaInicio, FechaFin, Activa
                 FROM Sesion

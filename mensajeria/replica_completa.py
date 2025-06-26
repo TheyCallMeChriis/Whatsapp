@@ -5,7 +5,7 @@ import mysql.connector
 class Replicacion:
     def replicar(self):
         try:
-            # Conexión a SQL Server
+            
             sql_conn = pyodbc.connect(
                 "DRIVER={ODBC Driver 17 for SQL Server};"
                 "SERVER=localhost;"
@@ -14,7 +14,6 @@ class Replicacion:
             )
             sql_cursor = sql_conn.cursor()
 
-            # Conexión a MySQL
             mysql_conn = mysql.connector.connect(
                 host="localhost",
                 user="root",
@@ -23,12 +22,12 @@ class Replicacion:
             )
             mysql_cursor = mysql_conn.cursor()
 
-            # Borrar datos en orden de dependencias
+            
             mysql_cursor.execute("DELETE FROM Mensaje")
             mysql_cursor.execute("DELETE FROM Sesion")
             mysql_cursor.execute("DELETE FROM Usuario")
 
-            # Replicar usuarios
+            
             sql_cursor.execute("""
                 SELECT UsuarioID, Nombre, Apellido, Contrasenna, Correo, Estado, NumeroTelefono, Actualizado FROM Usuario
             """)
@@ -39,7 +38,7 @@ class Replicacion:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, datos)
 
-            # Replicar mensajes
+           
             sql_cursor.execute("""
                 SELECT MensajeID, EmisorID, ReceptorID, MensajeEncriptado, FechaEnvio, Actualizado FROM Mensaje
             """)
@@ -50,7 +49,7 @@ class Replicacion:
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, datos)
 
-            # Replicar sesiones
+            
             sql_cursor.execute("""
                 SELECT SesionID, UsuarioID, Token, FechaInicio, FechaFin, Activa FROM Sesion
             """)
@@ -61,7 +60,7 @@ class Replicacion:
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, datos)
 
-            # Confirmar los cambios en MySQL
+            
             mysql_conn.commit()
             print("✅ Replicación completa ejecutada correctamente.")
         

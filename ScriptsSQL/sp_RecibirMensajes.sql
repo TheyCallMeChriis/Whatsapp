@@ -6,11 +6,11 @@ CREATE OR ALTER PROCEDURE sp_RecibirMensajes (
 )
 AS
 BEGIN
-    -- Abrir la llave simétrica para desencriptar
+    
     OPEN SYMMETRIC KEY Usuario_Key_01
     DECRYPTION BY CERTIFICATE Usuario_KEY_CERT;
 
-    -- Consultar mensajes desencriptados
+    
     SELECT 
         m.MensajeID,
         m.EmisorID,
@@ -21,7 +21,7 @@ BEGIN
     INNER JOIN Usuario u ON m.EmisorID = u.UsuarioID
     WHERE m.ReceptorID = @param_ReceptorID;
 
-    -- Cerrar la llave
+    
     CLOSE SYMMETRIC KEY Usuario_Key_01;
 END;
 

@@ -13,7 +13,7 @@ CREATE OR ALTER PROCEDURE sp_CerrarSesion (
 AS
 BEGIN
     BEGIN TRY
-        -- Verificar si existe una sesi�n activa para el usuario
+        
         IF NOT EXISTS (
             SELECT 1 FROM Sesion WHERE UsuarioID = @param_UsuarioID AND Activa = 1
         )
@@ -22,7 +22,7 @@ BEGIN
             RETURN;
         END
 
-        -- Eliminar el registro de la sesi�n activa
+        
         DELETE FROM Sesion
         WHERE UsuarioID = @param_UsuarioID AND Activa = 1;
 
