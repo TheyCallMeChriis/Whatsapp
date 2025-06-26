@@ -1,28 +1,41 @@
-USE IF5100_Proyecto
-Go
+use MensajeriaBD;
+go
+
+select * from Usuario;
+go 
+
+select * from Sesion;
+go
 
 CREATE OR ALTER PROCEDURE sp_CerrarSesion (
-    @param_Token NVARCHAR(255)
+    @param_UsuarioID INT
 )
 AS
 BEGIN
-    -- Verifica si hay una sesión activa con ese token y la cierra
-    UPDATE Sesion
-    SET 
-        FechaFin = GETDATE(),
-        Activa = 0
-    WHERE 
-        Token = @param_Token
-        AND Activa = 1
-        AND FechaFin IS NULL;
+    BEGIN TRY
+        -- Verificar si existe una sesiï¿½n activa para el usuario
+        IF NOT EXISTS (
+            SELECT 1 FROM Sesion WHERE UsuarioID = @param_UsuarioID AND Activa = 1
+        )
+        BEGIN
+            RAISERROR('No hay una sesiï¿½n activa para este usuario.', 16, 1);
+            RETURN;
+        END
 
-    -- Verifica si alguna fila fue afectada
-    IF @@ROWCOUNT = 0
-    BEGIN
-        PRINT 'Sesión no encontrada, ya cerrada o token inválido.';
-    END
-    ELSE
-    BEGIN
-        PRINT 'Sesión cerrada exitosamente.';
-    END
+        -- Eliminar el registro de la sesiï¿½n activa
+        DELETE FROM Sesion
+        WHERE UsuarioID = @param_UsuarioID AND Activa = 1;
+
+        PRINT 'Sesiï¿½n cerrada correctamente.';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000), @ErrSeverity INT;
+        SELECT @ErrMsg = ERROR_MESSAGE(), @ErrSeverity = ERROR_SEVERITY();
+        RAISERROR(@ErrMsg, @ErrSeverity, 1);
+    END CATCH
 END;
+GO
+
+
+EXEC sp_CerrarSesion
+    @param_UsuarioID = '2004';
