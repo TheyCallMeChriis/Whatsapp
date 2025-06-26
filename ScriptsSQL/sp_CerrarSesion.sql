@@ -18,7 +18,7 @@ BEGIN
             SELECT 1 FROM Sesion WHERE UsuarioID = @param_UsuarioID AND Activa = 1
         )
         BEGIN
-            RAISERROR('No hay una sesi�n activa para este usuario.', 16, 1);
+            RAISERROR('No hay una sesion activa para este usuario.', 16, 1);
             RETURN;
         END
 
@@ -26,7 +26,7 @@ BEGIN
         DELETE FROM Sesion
         WHERE UsuarioID = @param_UsuarioID AND Activa = 1;
 
-        PRINT 'Sesi�n cerrada correctamente.';
+        PRINT 'Sesion cerrada correctamente.';
     END TRY
     BEGIN CATCH
         DECLARE @ErrMsg NVARCHAR(4000), @ErrSeverity INT;
